@@ -1,3 +1,12 @@
-# ICSI333Project4
-Theres nothing here yet,
-Soon though!
+# ICSI 333 Project 4
+Project to create a simple webserver in C language.
+
+##Description
+
+
+
+
+##Authors
+
+
+##Etc...
