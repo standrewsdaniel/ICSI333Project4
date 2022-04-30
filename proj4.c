@@ -34,12 +34,12 @@ Methods:
 #include <sys/wait.h>
 #include <signal.h>
 #include <pthread.h>
-#include<sys/dir.h>
-#include<sys/stat.h>
-#include<dirent.h>
-#include<fcntl.h>
-#include<unistd.h>
-#include<string.h>
+#include <sys/dir.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
 
 
 #define PORT_NUM 8000
@@ -49,6 +49,8 @@ int fd;
 
 int main(int argc, char* argv[]) {
 
+	//Variables used for printing messages to screen in regards to
+	//	program status. 
 	char* message1 = "HTTP/1.0";
 	char* message2 = "Content-Length:";
 	char* requestMgs = "GET";
@@ -57,12 +59,14 @@ int main(int argc, char* argv[]) {
 	int noFile = 404;
 	char* buf[BUFSIZ];
 
+	//Verify there are enough arguments
 	if (argc <= 1) {
 		printf("Not enough arguments! Exiting...\n");
 		fflush(stdout);
 		exit(1);
 	}
 	else {
+		//Has enough arguments, open file for reading.
 		fd = open(argv[1], O_RDONLY);
 		if (fd == -1) {
 			printf("%s", argv[1]);
@@ -71,6 +75,7 @@ int main(int argc, char* argv[]) {
 			exit(1);
 		}
 		else{
+			//File opened successfully, read into buffer and store or print. 
 			read(fd, buf, BUFSIZ);
 			//This is where instead of writing to screen it can
 			// be stored and then sent to the server / client.
@@ -78,8 +83,5 @@ int main(int argc, char* argv[]) {
 		}
 
 	}
-
-
-
 
 }
