@@ -14,10 +14,11 @@ threading, and file system calls.
 
 Changelog:
 -Created 4/23/22
+-Daniel S - Implemented Webserver and file serving
+-Daniel N - Implemented File Checking and error checking
+-Andrew C - Implemented threading
 
-Methods:
-
-
+*The three of us were together in person for the entirety of the project and continously collaborated!*
 
 */
 
@@ -40,6 +41,7 @@ Methods:
 #include <fcntl.h>
 #include <unistd.h>
 
+//Change port to 8000 for submission, 18000 is clear so that firewall isnt an issue.
 #define PORT_NUM 18000
 #define SA struct sockaddr
 #define MAXLINE 100
@@ -97,7 +99,7 @@ int main(int argc, char* argv[]) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-			//Creat the socket
+			//Create the socket
 			if((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 				printf("Error creating the socket!");
 				fflush(stdout);
@@ -115,9 +117,17 @@ int main(int argc, char* argv[]) {
 			//This indicates port the server is going to run on
 			servaddr.sin_port = htons(PORT_NUM);
 
+			//Ignores the wait timer on the socket and allows program to
+			// be run back to back.
+			int yes = 1;
+			if(setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, (void*)&yes, sizeof(yes)) < 0){
+				printf("setsockopt() failed. Error!!");
+			}
+
 			//Bind the socket for listening so it can accept info
 			if((bind(listenfd, (SA*)&servaddr, sizeof(servaddr))) < 0){
 				printf("Binding to socket error! Exiting...");
+				printf("The error for is %d", errno);
 				fflush(stdout);
 				exit(1);
 			}
@@ -127,6 +137,9 @@ int main(int argc, char* argv[]) {
 				exit(1);
 			}
 
+			//This is probably where threading should be 
+			//implemented, this loop waits for new requests
+			//and serves the file to the client. 
 			for( ; ;){
 
 				struct sockaddr_in addr;
@@ -154,34 +167,47 @@ int main(int argc, char* argv[]) {
 					exit(1);
 				}
 
-				snprintf((char*)buf, sizeof(buf), "HTTP/1.1 200 OK\r\n\r\nFILE CONTENTS");
+				snprintf((char*)buf, sizeof(buf), "HTTP/1.1 200 OK\r\n\r\n");
+
+				//Reads file from user specified path
+				read(fd, buffer, BUFSIZ);
+
+				//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+				//			SERVE TO CLIENT             ~
+				//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 				write(connfd, (char*)buf, strlen((char*)buf));
+
+				snprintf((char*)buf, sizeof(buf), "HTTP/1.0 200 OK\n");
+
+				write(connfd, (char*)buf, strlen((char*)buf));
+
+				int sizeOfFile = strlen((char*)buffer);
+
+				char* charSize[MAXLINE];
+
+				sprintf(charSize, "%d", sizeOfFile);
+
+				snprintf((char*)buf, sizeof(buf), "Length Of File:");
+
+				write(connfd, (char*)buf, strlen((char*)buf));
+
+				snprintf((char*)buf, sizeof(buf), charSize);
+
+				write(connfd, (char*)buf, strlen((char*)buf));
+
+				snprintf((char*)buf, sizeof(buf), "\n");
+
+				write(connfd, (char*)buf, strlen((char*)buf));
+
+				snprintf((char*)buf, sizeof(buf), (char*)buffer);
+
+				write(connfd, (char*)buffer, strlen((char*)buffer));
+
 				close(connfd);
-
-
+				
+				memset(recvline, 0, MAXLINE);
 			}
-
-
-			printf("Hit else path for successful file open");
-			//File opened successfully, read into buffer and store or print.
-			read(fd, buffer, BUFSIZ);
-			//This is where instead of writing to screen it can
-			// be stored and then sent to the server / client.
-			//write(STDOUT_FILENO, buf, BUFSIZ);
-
-
-
-
-
-
-
-
-
-
-
 		}
-
 	}
-
 }
